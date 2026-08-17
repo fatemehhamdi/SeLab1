@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
@@ -39,7 +39,6 @@ function getPiece(fileIndex, rank) {
     return {
       color: 'black',
       type: backRank[fileIndex],
-      hasMoved: false,
     }
   }
 
@@ -47,7 +46,6 @@ function getPiece(fileIndex, rank) {
     return {
       color: 'black',
       type: 'pawn',
-      hasMoved: false,
     }
   }
 
@@ -55,7 +53,6 @@ function getPiece(fileIndex, rank) {
     return {
       color: 'white',
       type: 'pawn',
-      hasMoved: false,
     }
   }
 
@@ -63,7 +60,6 @@ function getPiece(fileIndex, rank) {
     return {
       color: 'white',
       type: backRank[fileIndex],
-      hasMoved: false,
     }
   }
 
@@ -86,6 +82,7 @@ function createInitialBoard() {
   return board
 }
 
+<<<<<<< Updated upstream
 function getSquare(fileIndex, rank) {
   if (
     fileIndex < 0 ||
@@ -276,10 +273,13 @@ function isKingInCheck(board, color) {
  * Candidate moves are moves that obey the movement rules of
  * the piece. They are not necessarily legal chess moves yet.
  */
+=======
+>>>>>>> Stashed changes
 function getCandidateMoves(
-  board,
-  square,
+  fileIndex,
+  rank,
   piece,
+<<<<<<< Updated upstream
   enPassantTarget,
   includeCastling = true,
 ) {
@@ -299,20 +299,45 @@ function getCandidateMoves(
     if (!target) return null
 
     return target
+=======
+  getBoardPiece,
+) {
+  const moves = []
+
+  const addStep = (fileOffset, rankOffset) => {
+    const nextFile = fileIndex + fileOffset
+    const nextRank = rank + rankOffset
+
+    if (
+      nextFile < 0 ||
+      nextFile >= 8 ||
+      nextRank < 1 ||
+      nextRank > 8
+    ) {
+      return null
+    }
+
+    return `${files[nextFile]}${nextRank}`
+>>>>>>> Stashed changes
   }
 
   if (piece.type === 'pawn') {
     const direction =
       piece.color === 'white' ? 1 : -1
+<<<<<<< Updated upstream
 
     const startingRank =
       piece.color === 'white' ? 2 : 7
 
     const promotionRank =
       piece.color === 'white' ? 8 : 1
+=======
+>>>>>>> Stashed changes
 
     const oneStep = addStep(0, direction)
+    const twoStep = addStep(0, direction * 2)
 
+<<<<<<< Updated upstream
     if (
       oneStep &&
       !board[oneStep]
@@ -323,11 +348,18 @@ function getCandidateMoves(
         0,
         direction * 2,
       )
+=======
+    if (oneStep && !getBoardPiece(oneStep)) {
+      moves.push(oneStep)
+
+      const startingRank =
+        piece.color === 'white' ? 2 : 7
+>>>>>>> Stashed changes
 
       if (
         rank === startingRank &&
         twoStep &&
-        !board[twoStep]
+        !getBoardPiece(twoStep)
       ) {
         moves.push(twoStep)
       }
@@ -339,6 +371,7 @@ function getCandidateMoves(
         direction,
       )
 
+<<<<<<< Updated upstream
       if (!captureSquare) return
 
       const target = board[captureSquare]
@@ -357,10 +390,20 @@ function getCandidateMoves(
       if (
         !target &&
         enPassantTarget === captureSquare
+=======
+      const target =
+        captureSquare &&
+        getBoardPiece(captureSquare)
+
+      if (
+        target &&
+        target.color !== piece.color
+>>>>>>> Stashed changes
       ) {
         moves.push(captureSquare)
       }
     })
+<<<<<<< Updated upstream
 
     /*
      * promotionRank is intentionally referenced so the
@@ -371,6 +414,10 @@ function getCandidateMoves(
 
   if (piece.type === 'knight') {
     const knightMoves = [
+=======
+  } else if (piece.type === 'knight') {
+    ;[
+>>>>>>> Stashed changes
       [1, 2],
       [2, 1],
       [2, -1],
@@ -379,31 +426,36 @@ function getCandidateMoves(
       [-2, -1],
       [-2, 1],
       [-1, 2],
-    ]
-
-    knightMoves.forEach(([fileOffset, rankOffset]) => {
-      const targetSquare = addStep(
+    ].forEach(([fileOffset, rankOffset]) => {
+      const square = addStep(
         fileOffset,
         rankOffset,
       )
 
+<<<<<<< Updated upstream
       if (!targetSquare) return
 
       const target = board[targetSquare]
+=======
+      const target =
+        square && getBoardPiece(square)
+>>>>>>> Stashed changes
 
       if (
-        !target ||
-        (
-          target.color !== piece.color &&
-          target.type !== 'king'
-        )
+        square &&
+        (!target ||
+          target.color !== piece.color)
       ) {
-        moves.push(targetSquare)
+        moves.push(square)
       }
     })
+<<<<<<< Updated upstream
   }
 
   if (
+=======
+  } else if (
+>>>>>>> Stashed changes
     piece.type === 'bishop' ||
     piece.type === 'rook' ||
     piece.type === 'queen'
@@ -434,6 +486,7 @@ function getCandidateMoves(
       )
     }
 
+<<<<<<< Updated upstream
     directions.forEach(([fileOffset, rankOffset]) => {
       for (
         let distance = 1;
@@ -457,9 +510,40 @@ function getCandidateMoves(
         if (
           target.color !== piece.color &&
           target.type !== 'king'
+=======
+    directions.forEach(
+      ([fileOffset, rankOffset]) => {
+        for (
+          let distance = 1;
+          distance < 8;
+          distance += 1
+>>>>>>> Stashed changes
         ) {
-          moves.push(targetSquare)
+          const square = addStep(
+            fileOffset * distance,
+            rankOffset * distance,
+          )
+
+          if (!square) {
+            break
+          }
+
+          const target =
+            getBoardPiece(square)
+
+          if (!target) {
+            moves.push(square)
+          } else {
+            if (
+              target.color !== piece.color
+            ) {
+              moves.push(square)
+            }
+
+            break
+          }
         }
+<<<<<<< Updated upstream
 
         break
       }
@@ -467,6 +551,11 @@ function getCandidateMoves(
   }
 
   if (piece.type === 'king') {
+=======
+      },
+    )
+  } else if (piece.type === 'king') {
+>>>>>>> Stashed changes
     for (
       let fileOffset = -1;
       fileOffset <= 1;
@@ -478,28 +567,33 @@ function getCandidateMoves(
         rankOffset += 1
       ) {
         if (
-          fileOffset === 0 &&
-          rankOffset === 0
+          !fileOffset &&
+          !rankOffset
         ) {
           continue
         }
 
-        const targetSquare = addStep(
+        const square = addStep(
           fileOffset,
           rankOffset,
         )
 
+<<<<<<< Updated upstream
         if (!targetSquare) continue
 
         const target = board[targetSquare]
+=======
+        const target =
+          square &&
+          getBoardPiece(square)
+>>>>>>> Stashed changes
 
         if (
-          !target ||
-          (
-            target.color !== piece.color &&
-            target.type !== 'king'
-          )
+          square &&
+          (!target ||
+            target.color !== piece.color)
         ) {
+<<<<<<< Updated upstream
           moves.push(targetSquare)
         }
       }
@@ -580,6 +674,9 @@ function getCandidateMoves(
           )
         ) {
           moves.push(`c${homeRank}`)
+=======
+          moves.push(square)
+>>>>>>> Stashed changes
         }
       }
     }
@@ -588,6 +685,7 @@ function getCandidateMoves(
   return moves
 }
 
+<<<<<<< Updated upstream
 /*
  * Applies a move to a copied board.
  *
@@ -830,14 +928,20 @@ function getNextEnPassantTarget(
   return `${files[fromCoordinates.fileIndex]}${middleRank}`
 }
 
+=======
+>>>>>>> Stashed changes
 function GameInfo({
   selectedSquare,
   selectedPiece,
   currentTurn,
   statusMessage,
   onClearSelection,
+<<<<<<< Updated upstream
   gameOver,
   onRestart,
+=======
+  onResetBoard,
+>>>>>>> Stashed changes
 }) {
   return (
     <aside
@@ -906,8 +1010,12 @@ function GameInfo({
           </>
         ) : (
           <span className="selection-empty">
+<<<<<<< Updated upstream
             Choose one of your pieces on the
             board.
+=======
+            Choose a white piece on the board.
+>>>>>>> Stashed changes
           </span>
         )}
       </div>
@@ -921,11 +1029,12 @@ function GameInfo({
         </span>
 
         <p>
-          The king may never remain in check.
-          Checkmate ends the game.
+          Take turns and capture your
+          opponent&apos;s pieces to win.
         </p>
       </div>
 
+<<<<<<< Updated upstream
       {gameOver && (
         <button
           className="restart-button"
@@ -935,6 +1044,15 @@ function GameInfo({
           New game
         </button>
       )}
+=======
+      <button
+        className="restart-button"
+        type="button"
+        onClick={onResetBoard}
+      >
+        ↻ Reset board
+      </button>
+>>>>>>> Stashed changes
     </aside>
   )
 }
@@ -943,7 +1061,6 @@ function ChessBoard({
   board,
   selectedSquare,
   allowedSquares,
-  checkedKingSquare,
   onSquareClick,
 }) {
   return (
@@ -970,11 +1087,9 @@ function ChessBoard({
             const isAllowed =
               allowedSquares.includes(square)
 
-            const isChecked =
-              checkedKingSquare === square
-
             return (
               <button
+<<<<<<< Updated upstream
                 className={[
                   'square',
                   isLight
@@ -990,6 +1105,15 @@ function ChessBoard({
                     ? 'in-check'
                     : '',
                 ].join(' ')}
+=======
+                className={`square ${
+                  isLight ? 'light' : 'dark'
+                } ${
+                  isSelected ? 'selected' : ''
+                } ${
+                  isAllowed ? 'allowed' : ''
+                }`}
+>>>>>>> Stashed changes
                 key={square}
                 type="button"
                 role="gridcell"
@@ -1054,18 +1178,13 @@ function App() {
   const [allowedSquares, setAllowedSquares] =
     useState([])
 
-  const [enPassantTarget, setEnPassantTarget] =
-    useState(null)
-
-  const [gameOver, setGameOver] =
-    useState(false)
-
   const [statusMessage, setStatusMessage] =
     useState({
       type: 'info',
       text: 'Select one of your pieces to begin.',
     })
 
+<<<<<<< Updated upstream
   const selectedPiece = selectedSquare
     ? board[selectedSquare]
     : null
@@ -1086,6 +1205,23 @@ function App() {
     return null
   }, [board])
 
+=======
+  /*
+   * Reset the board at any time.
+   */
+  const resetBoard = () => {
+    setBoard(createInitialBoard())
+    setCurrentTurn('white')
+    setSelectedSquare(null)
+    setAllowedSquares([])
+
+    setStatusMessage({
+      type: 'info',
+      text: 'Board reset. White to move.',
+    })
+  }
+
+>>>>>>> Stashed changes
   useEffect(() => {
     const cancelSelection = (event) => {
       if (event.key === 'Escape') {
@@ -1106,11 +1242,18 @@ function App() {
       )
   }, [])
 
+<<<<<<< Updated upstream
+=======
+  const getBoardPiece = (square) =>
+    board[square]
+
+>>>>>>> Stashed changes
   const clearSelection = () => {
     setSelectedSquare(null)
     setAllowedSquares([])
   }
 
+<<<<<<< Updated upstream
   const finishTurn = (
     nextBoard,
     movingPiece,
@@ -1213,18 +1356,25 @@ function App() {
     /*
      * A legal destination was selected.
      */
+=======
+  const handleSquareClickWithRules = (
+    square,
+  ) => {
+>>>>>>> Stashed changes
     if (
       selectedSquare &&
       allowedSquares.includes(square)
     ) {
-      const movingPiece =
-        board[selectedSquare]
+      setBoard((currentBoard) => {
+        const nextBoard = {
+          ...currentBoard,
+          [square]:
+            currentBoard[selectedSquare],
+        }
 
-      if (!movingPiece) {
-        clearSelection()
-        return
-      }
+        delete nextBoard[selectedSquare]
 
+<<<<<<< Updated upstream
       const nextBoard = applyMove(
         board,
         selectedSquare,
@@ -1238,13 +1388,37 @@ function App() {
         selectedSquare,
         square,
       )
+=======
+        return nextBoard
+      })
+
+      clearSelection()
+
+      setCurrentTurn((turn) =>
+        turn === 'white'
+          ? 'black'
+          : 'white',
+      )
+
+      setStatusMessage({
+        type: 'success',
+        text: `Valid move. ${
+          currentTurn === 'white'
+            ? 'Black'
+            : 'White'
+        }'s turn now.`,
+      })
+>>>>>>> Stashed changes
 
       return
     }
 
+<<<<<<< Updated upstream
     /*
      * Clicking the selected piece cancels selection.
      */
+=======
+>>>>>>> Stashed changes
     if (selectedSquare === square) {
       clearSelection()
 
@@ -1256,25 +1430,33 @@ function App() {
       return
     }
 
-    const piece = board[square]
+    const fileIndex = files.indexOf(
+      square[0],
+    )
 
+    const rank = Number(
+      square[1],
+    )
+
+    const piece = getBoardPiece(square)
+
+<<<<<<< Updated upstream
     /*
      * Empty square without an active move.
      */
+=======
+>>>>>>> Stashed changes
     if (!piece) {
       clearSelection()
 
       setStatusMessage({
         type: 'error',
-        text: 'Choose one of your pieces.',
+        text: 'Invalid move: choose a square with your piece.',
       })
 
       return
     }
 
-    /*
-     * Wrong player's piece.
-     */
     if (piece.color !== currentTurn) {
       clearSelection()
 
@@ -1290,6 +1472,7 @@ function App() {
       return
     }
 
+<<<<<<< Updated upstream
     const legalMoves =
       getLegalMoves(
         board,
@@ -1323,6 +1506,18 @@ function App() {
 
       return
     }
+=======
+    setSelectedSquare(square)
+
+    setAllowedSquares(
+      getCandidateMoves(
+        fileIndex,
+        rank,
+        piece,
+        getBoardPiece,
+      ),
+    )
+>>>>>>> Stashed changes
 
     setSelectedSquare(square)
     setAllowedSquares(legalMoves)
@@ -1333,6 +1528,7 @@ function App() {
     })
   }
 
+<<<<<<< Updated upstream
   const restartGame = () => {
     setBoard(createInitialBoard())
     setCurrentTurn('white')
@@ -1346,6 +1542,11 @@ function App() {
       text: 'New game started. White to move.',
     })
   }
+=======
+  const selectedPiece = selectedSquare
+    ? board[selectedSquare]
+    : null
+>>>>>>> Stashed changes
 
   return (
     <main className="app-shell">
@@ -1364,9 +1565,7 @@ function App() {
 
         <div className="status-pill">
           <span />
-          {gameOver
-            ? 'Game over'
-            : 'Game ready'}
+          Game ready
         </div>
       </header>
 
@@ -1389,9 +1588,7 @@ function App() {
             <span className="board-size">
               {selectedSquare
                 ? 'Press Esc to cancel'
-                : gameOver
-                  ? 'Game over'
-                  : `${currentTurn} to move`}
+                : `${currentTurn} to move`}
             </span>
           </div>
 
@@ -1403,11 +1600,8 @@ function App() {
             allowedSquares={
               allowedSquares
             }
-            checkedKingSquare={
-              checkedKingSquare
-            }
             onSquareClick={
-              handleSquareClick
+              handleSquareClickWithRules
             }
           />
         </section>
@@ -1426,8 +1620,12 @@ function App() {
           onClearSelection={
             clearSelection
           }
+<<<<<<< Updated upstream
           gameOver={gameOver}
           onRestart={restartGame}
+=======
+          onResetBoard={resetBoard}
+>>>>>>> Stashed changes
         />
       </div>
     </main>
