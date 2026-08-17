@@ -33,44 +33,66 @@ function getPiece(fileIndex, rank) {
   return null
 }
 
-function getCandidateMoves(fileIndex, rank, type) {
+function getCandidateMoves(fileIndex, rank, piece, getBoardPiece) {
   const moves = []
-  const addMove = (fileOffset, rankOffset) => {
+  const addStep = (fileOffset, rankOffset) => {
     const nextFile = fileIndex + fileOffset
     const nextRank = rank + rankOffset
-    if (nextFile >= 0 && nextFile < 8 && nextRank >= 1 && nextRank <= 8) {
-      moves.push(`${files[nextFile]}${nextRank}`)
-    }
+    if (nextFile < 0 || nextFile >= 8 || nextRank < 1 || nextRank > 8) return null
+    return `${files[nextFile]}${nextRank}`
   }
 
-  if (type === 'pawn') {
-    addMove(0, 1)
-    if (rank === 2) addMove(0, 2)
-  } else if (type === 'knight') {
+  if (piece.type === 'pawn') {
+    const direction = piece.color === 'white' ? 1 : -1
+    const oneStep = addStep(0, direction)
+    const twoStep = addStep(0, direction * 2)
+    if (oneStep && !getBoardPiece(oneStep)) {
+      moves.push(oneStep)
+      const startingRank = piece.color === 'white' ? 2 : 7
+      if (rank === startingRank && twoStep && !getBoardPiece(twoStep)) moves.push(twoStep)
+    }
+    ;[-1, 1].forEach((fileOffset) => {
+      const captureSquare = addStep(fileOffset, direction)
+      const target = captureSquare && getBoardPiece(captureSquare)
+      if (target && target.color !== piece.color) moves.push(captureSquare)
+    })
+  } else if (piece.type === 'knight') {
     ;[
       [1, 2], [2, 1], [2, -1], [1, -2],
       [-1, -2], [-2, -1], [-2, 1], [-1, 2],
-    ].forEach(([fileOffset, rankOffset]) => addMove(fileOffset, rankOffset))
-  } else if (type === 'bishop' || type === 'rook' || type === 'queen') {
+    ].forEach(([fileOffset, rankOffset]) => {
+      const square = addStep(fileOffset, rankOffset)
+      const target = square && getBoardPiece(square)
+      if (square && (!target || target.color !== piece.color)) moves.push(square)
+    })
+  } else if (piece.type === 'bishop' || piece.type === 'rook' || piece.type === 'queen') {
     const directions = []
-    if (type === 'bishop' || type === 'queen') {
+    if (piece.type === 'bishop' || piece.type === 'queen') {
       directions.push([1, 1], [1, -1], [-1, 1], [-1, -1])
     }
-    if (type === 'rook' || type === 'queen') {
+    if (piece.type === 'rook' || piece.type === 'queen') {
       directions.push([1, 0], [-1, 0], [0, 1], [0, -1])
     }
     directions.forEach(([fileOffset, rankOffset]) => {
       for (let distance = 1; distance < 8; distance += 1) {
-        const nextFile = fileIndex + fileOffset * distance
-        const nextRank = rank + rankOffset * distance
-        if (nextFile < 0 || nextFile >= 8 || nextRank < 1 || nextRank > 8) break
-        moves.push(`${files[nextFile]}${nextRank}`)
+        const square = addStep(fileOffset * distance, rankOffset * distance)
+        if (!square) break
+        const target = getBoardPiece(square)
+        if (!target) {
+          moves.push(square)
+        } else {
+          if (target.color !== piece.color) moves.push(square)
+          break
+        }
       }
     })
-  } else if (type === 'king') {
+  } else if (piece.type === 'king') {
     for (let fileOffset = -1; fileOffset <= 1; fileOffset += 1) {
       for (let rankOffset = -1; rankOffset <= 1; rankOffset += 1) {
-        if (fileOffset || rankOffset) addMove(fileOffset, rankOffset)
+        if (!fileOffset && !rankOffset) continue
+        const square = addStep(fileOffset, rankOffset)
+        const target = square && getBoardPiece(square)
+        if (square && (!target || target.color !== piece.color)) moves.push(square)
       }
     }
   }
@@ -167,34 +189,34 @@ function App() {
     return () => window.removeEventListener('keydown', cancelSelection)
   }, [])
 
-  const handleSquareClick = (square) => {
+  const getBoardPiece = (square) => getPiece(files.indexOf(square[0]), Number(square[1]))
+  const clearSelection = () => {
+    setSelectedSquare(null)
+    setAllowedSquares([])
+  }
+
+  const handleSquareClickWithRules = (square) => {
     if (selectedSquare === square) {
-      setSelectedSquare(null)
-      setAllowedSquares([])
+      clearSelection()
       return
     }
 
     const fileIndex = files.indexOf(square[0])
     const rank = Number(square[1])
-    const piece = getPiece(fileIndex, rank)
+    const piece = getBoardPiece(square)
 
     if (!piece || piece.color !== 'white') {
-      setSelectedSquare(null)
-      setAllowedSquares([])
+      clearSelection()
       return
     }
 
     setSelectedSquare(square)
-    setAllowedSquares(getCandidateMoves(fileIndex, rank, piece.type))
+    setAllowedSquares(getCandidateMoves(fileIndex, rank, piece, getBoardPiece))
   }
 
   const selectedFileIndex = selectedSquare ? files.indexOf(selectedSquare[0]) : -1
   const selectedRank = selectedSquare ? Number(selectedSquare[1]) : 0
   const selectedPiece = selectedSquare ? getPiece(selectedFileIndex, selectedRank) : null
-  const clearSelection = () => {
-    setSelectedSquare(null)
-    setAllowedSquares([])
-  }
 
   return (
     <main className="app-shell">
@@ -219,7 +241,7 @@ function App() {
           <ChessBoard
             selectedSquare={selectedSquare}
             allowedSquares={allowedSquares}
-            onSquareClick={handleSquareClick}
+            onSquareClick={handleSquareClickWithRules}
           />
         </section>
         <GameInfo
