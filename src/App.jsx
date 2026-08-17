@@ -86,6 +86,28 @@ function createInitialBoard() {
   return board
 }
 
+function getCandidateMoves(
+  fileIndex,
+  rank,
+  piece,
+  getBoardPiece,
+) {
+  const moves = []
+
+  const addStep = (fileOffset, rankOffset) => {
+    const nextFile = fileIndex + fileOffset
+    const nextRank = rank + rankOffset
+
+    if (
+      nextFile < 0 ||
+      nextFile >= 8 ||
+      nextRank < 1 ||
+      nextRank > 8
+    ) {
+      return null
+    }
+
+    return `${files[nextFile]}${nextRank}`
 function getSquare(fileIndex, rank) {
   if (
     fileIndex < 0 ||
@@ -305,6 +327,14 @@ function getCandidateMoves(
     const direction =
       piece.color === 'white' ? 1 : -1
 
+    const oneStep = addStep(0, direction)
+    const twoStep = addStep(0, direction * 2)
+
+    if (oneStep && !getBoardPiece(oneStep)) {
+      moves.push(oneStep)
+
+      const startingRank =
+        piece.color === 'white' ? 2 : 7
     const startingRank =
       piece.color === 'white' ? 2 : 7
 
@@ -327,6 +357,7 @@ function getCandidateMoves(
       if (
         rank === startingRank &&
         twoStep &&
+        !getBoardPiece(twoStep)
         !board[twoStep]
       ) {
         moves.push(twoStep)
@@ -339,6 +370,13 @@ function getCandidateMoves(
         direction,
       )
 
+      const target =
+        captureSquare &&
+        getBoardPiece(captureSquare)
+
+      if (
+        target &&
+        target.color !== piece.color
       if (!captureSquare) return
 
       const target = board[captureSquare]
@@ -361,6 +399,8 @@ function getCandidateMoves(
         moves.push(captureSquare)
       }
     })
+  } else if (piece.type === 'knight') {
+    ;[
 
     /*
      * promotionRank is intentionally referenced so the
@@ -379,6 +419,8 @@ function getCandidateMoves(
       [-2, -1],
       [-2, 1],
       [-1, 2],
+    ].forEach(([fileOffset, rankOffset]) => {
+      const square = addStep(
     ]
 
     knightMoves.forEach(([fileOffset, rankOffset]) => {
@@ -387,6 +429,18 @@ function getCandidateMoves(
         rankOffset,
       )
 
+      const target =
+        square && getBoardPiece(square)
+
+      if (
+        square &&
+        (!target ||
+          target.color !== piece.color)
+      ) {
+        moves.push(square)
+      }
+    })
+  } else if (
       if (!targetSquare) return
 
       const target = board[targetSquare]
@@ -434,6 +488,40 @@ function getCandidateMoves(
       )
     }
 
+    directions.forEach(
+      ([fileOffset, rankOffset]) => {
+        for (
+          let distance = 1;
+          distance < 8;
+          distance += 1
+        ) {
+          const square = addStep(
+            fileOffset * distance,
+            rankOffset * distance,
+          )
+
+          if (!square) {
+            break
+          }
+
+          const target =
+            getBoardPiece(square)
+
+          if (!target) {
+            moves.push(square)
+          } else {
+            if (
+              target.color !== piece.color
+            ) {
+              moves.push(square)
+            }
+
+            break
+          }
+        }
+      },
+    )
+  } else if (piece.type === 'king') {
     directions.forEach(([fileOffset, rankOffset]) => {
       for (
         let distance = 1;
@@ -478,17 +566,30 @@ function getCandidateMoves(
         rankOffset += 1
       ) {
         if (
+          !fileOffset &&
+          !rankOffset
           fileOffset === 0 &&
           rankOffset === 0
         ) {
           continue
         }
 
+        const square = addStep(
         const targetSquare = addStep(
           fileOffset,
           rankOffset,
         )
 
+        const target =
+          square &&
+          getBoardPiece(square)
+
+        if (
+          square &&
+          (!target ||
+            target.color !== piece.color)
+        ) {
+          moves.push(square)
         if (!targetSquare) continue
 
         const target = board[targetSquare]
@@ -836,6 +937,7 @@ function GameInfo({
   currentTurn,
   statusMessage,
   onClearSelection,
+  onResetBoard,
   gameOver,
   onRestart,
 }) {
@@ -906,6 +1008,7 @@ function GameInfo({
           </>
         ) : (
           <span className="selection-empty">
+            Choose a white piece on the board.
             Choose one of your pieces on the
             board.
           </span>
@@ -921,6 +1024,18 @@ function GameInfo({
         </span>
 
         <p>
+          Take turns and capture your
+          opponent&apos;s pieces to win.
+        </p>
+      </div>
+
+      <button
+        className="restart-button"
+        type="button"
+        onClick={onResetBoard}
+      >
+        ↻ Reset board
+      </button>
           The king may never remain in check.
           Checkmate ends the game.
         </p>
@@ -955,6 +1070,8 @@ function ChessBoard({
       >
         {ranks.flatMap((rank) =>
           files.map((file, fileIndex) => {
+            const square = `${file}${rank}`
+            const piece = board[square]
             const square =
               `${file}${rank}`
 
@@ -969,6 +1086,16 @@ function ChessBoard({
 
             const isAllowed =
               allowedSquares.includes(square)
+
+            return (
+              <button
+                className={`square ${
+                  isLight ? 'light' : 'dark'
+                } ${
+                  isSelected ? 'selected' : ''
+                } ${
+                  isAllowed ? 'allowed' : ''
+                }`}
 
             const isChecked =
               checkedKingSquare === square
@@ -1009,6 +1136,9 @@ function ChessBoard({
                     aria-label={`${piece.color} ${piece.type}`}
                   >
                     {
+                      pieces[piece.color][
+                        piece.type
+                      ]
                       pieces[
                         piece.color
                       ][piece.type]
@@ -1066,6 +1196,20 @@ function App() {
       text: 'Select one of your pieces to begin.',
     })
 
+  /*
+   * Reset the board at any time.
+   */
+  const resetBoard = () => {
+    setBoard(createInitialBoard())
+    setCurrentTurn('white')
+    setSelectedSquare(null)
+    setAllowedSquares([])
+
+    setStatusMessage({
+      type: 'info',
+      text: 'Board reset. White to move.',
+    })
+  }
   const selectedPiece = selectedSquare
     ? board[selectedSquare]
     : null
@@ -1106,10 +1250,49 @@ function App() {
       )
   }, [])
 
+  const getBoardPiece = (square) =>
+    board[square]
+
   const clearSelection = () => {
     setSelectedSquare(null)
     setAllowedSquares([])
   }
+
+  const handleSquareClickWithRules = (
+    square,
+  ) => {
+    if (
+      selectedSquare &&
+      allowedSquares.includes(square)
+    ) {
+      setBoard((currentBoard) => {
+        const nextBoard = {
+          ...currentBoard,
+          [square]:
+            currentBoard[selectedSquare],
+        }
+
+        delete nextBoard[selectedSquare]
+
+        return nextBoard
+      })
+
+      clearSelection()
+
+      setCurrentTurn((turn) =>
+        turn === 'white'
+          ? 'black'
+          : 'white',
+      )
+
+      setStatusMessage({
+        type: 'success',
+        text: `Valid move. ${
+          currentTurn === 'white'
+            ? 'Black'
+            : 'White'
+        }'s turn now.`,
+      })
 
   const finishTurn = (
     nextBoard,
@@ -1256,6 +1439,15 @@ function App() {
       return
     }
 
+    const fileIndex = files.indexOf(
+      square[0],
+    )
+
+    const rank = Number(
+      square[1],
+    )
+
+    const piece = getBoardPiece(square)
     const piece = board[square]
 
     /*
@@ -1266,6 +1458,7 @@ function App() {
 
       setStatusMessage({
         type: 'error',
+        text: 'Invalid move: choose a square with your piece.',
         text: 'Choose one of your pieces.',
       })
 
@@ -1274,7 +1467,7 @@ function App() {
 
     /*
      * Wrong player's piece.
-     */
+   */
     if (piece.color !== currentTurn) {
       clearSelection()
 
@@ -1325,6 +1518,15 @@ function App() {
     }
 
     setSelectedSquare(square)
+
+    setAllowedSquares(
+      getCandidateMoves(
+        fileIndex,
+        rank,
+        piece,
+        getBoardPiece,
+      ),
+    )
     setAllowedSquares(legalMoves)
 
     setStatusMessage({
@@ -1333,6 +1535,9 @@ function App() {
     })
   }
 
+  const selectedPiece = selectedSquare
+    ? board[selectedSquare]
+    : null
   const restartGame = () => {
     setBoard(createInitialBoard())
     setCurrentTurn('white')
@@ -1364,6 +1569,7 @@ function App() {
 
         <div className="status-pill">
           <span />
+          Game ready
           {gameOver
             ? 'Game over'
             : 'Game ready'}
@@ -1389,6 +1595,7 @@ function App() {
             <span className="board-size">
               {selectedSquare
                 ? 'Press Esc to cancel'
+                : `${currentTurn} to move`}
                 : gameOver
                   ? 'Game over'
                   : `${currentTurn} to move`}
@@ -1403,6 +1610,8 @@ function App() {
             allowedSquares={
               allowedSquares
             }
+            onSquareClick={
+              handleSquareClickWithRules
             checkedKingSquare={
               checkedKingSquare
             }
@@ -1426,6 +1635,7 @@ function App() {
           onClearSelection={
             clearSelection
           }
+          onResetBoard={resetBoard}
           gameOver={gameOver}
           onRestart={restartGame}
         />
