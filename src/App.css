@@ -55,6 +55,10 @@ h2 { margin-top: 8px; font: 700 clamp(1.4rem, 2.5vw, 2rem)/1.1 Georgia, serif; }
 .turn-card { display: flex; align-items: center; gap: 14px; padding: 17px; border-radius: 13px; background: #eff6f0; }
 .turn-label { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .turn-card strong { display: block; margin-top: 5px; font-size: 15px; }
+.status-message { margin-top: 16px; padding: 11px 13px; border-radius: 9px; font-size: 12px; line-height: 1.45; }
+.status-message.info { background: #f2f5f3; color: var(--muted); }
+.status-message.success { background: #eaf6ed; color: #2d7548; }
+.status-message.error { background: #fff0ee; color: #aa493f; }
 .selection-card { margin-top: 18px; padding: 17px; border: 1px dashed var(--line); border-radius: 13px; }
 .selection-card.active { border-color: #9bc5a8; background: #f7fbf7; }
 .selection-card strong { display: block; margin-top: 6px; color: var(--ink); font-size: 16px; text-transform: capitalize; }

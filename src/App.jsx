@@ -111,7 +111,7 @@ function getCandidateMoves(fileIndex, rank, piece, getBoardPiece) {
   return moves
 }
 
-function GameInfo({ selectedSquare, selectedPiece, onClearSelection }) {
+function GameInfo({ selectedSquare, selectedPiece, currentTurn, statusMessage, onClearSelection }) {
   return (
     <aside className="game-info" aria-label="Game information">
       <span className="eyebrow">LOCAL MULTIPLAYER</span>
@@ -120,8 +120,11 @@ function GameInfo({ selectedSquare, selectedPiece, onClearSelection }) {
         <span className="turn-indicator" aria-hidden="true" />
         <div>
           <span className="turn-label">Current turn</span>
-          <strong>White to move</strong>
+          <strong>{currentTurn === 'white' ? 'White to move' : 'Black to move'}</strong>
         </div>
+      </div>
+      <div className={`status-message ${statusMessage.type}`} role="status">
+        {statusMessage.text}
       </div>
       <div className={`selection-card ${selectedPiece ? 'active' : ''}`}>
         <span className="turn-label">Selected piece</span>
@@ -187,8 +190,13 @@ function ChessBoard({ board, selectedSquare, allowedSquares, onSquareClick }) {
 
 function App() {
   const [board, setBoard] = useState(createInitialBoard)
+  const [currentTurn, setCurrentTurn] = useState('white')
   const [selectedSquare, setSelectedSquare] = useState(null)
   const [allowedSquares, setAllowedSquares] = useState([])
+  const [statusMessage, setStatusMessage] = useState({
+    type: 'info',
+    text: 'Select one of your pieces to begin.',
+  })
 
   useEffect(() => {
     const cancelSelection = (event) => {
@@ -215,11 +223,17 @@ function App() {
         return nextBoard
       })
       clearSelection()
+      setCurrentTurn((turn) => (turn === 'white' ? 'black' : 'white'))
+      setStatusMessage({
+        type: 'success',
+        text: `Valid move. ${currentTurn === 'white' ? 'Black' : 'White'}'s turn now.`,
+      })
       return
     }
 
     if (selectedSquare === square) {
       clearSelection()
+      setStatusMessage({ type: 'info', text: 'Selection cancelled.' })
       return
     }
 
@@ -227,13 +241,27 @@ function App() {
     const rank = Number(square[1])
     const piece = getBoardPiece(square)
 
-    if (!piece || piece.color !== 'white') {
+    if (!piece) {
       clearSelection()
+      setStatusMessage({ type: 'error', text: 'Invalid move: choose a square with your piece.' })
+      return
+    }
+
+    if (piece.color !== currentTurn) {
+      clearSelection()
+      setStatusMessage({
+        type: 'error',
+        text: `Invalid move: it is ${currentTurn}'s turn.`,
+      })
       return
     }
 
     setSelectedSquare(square)
     setAllowedSquares(getCandidateMoves(fileIndex, rank, piece, getBoardPiece))
+    setStatusMessage({
+      type: 'info',
+      text: `${piece.color} ${piece.type} selected. Choose a highlighted square.`,
+    })
   }
 
   const selectedPiece = selectedSquare ? board[selectedSquare] : null
@@ -256,7 +284,7 @@ function App() {
               <span className="eyebrow">THE BOARD</span>
               <h2 id="board-title">Make your move</h2>
             </div>
-            <span className="board-size">{selectedSquare ? 'Press Esc to cancel' : 'Select a piece'}</span>
+            <span className="board-size">{selectedSquare ? 'Press Esc to cancel' : `${currentTurn} to move`}</span>
           </div>
           <ChessBoard
             board={board}
@@ -268,6 +296,8 @@ function App() {
         <GameInfo
           selectedSquare={selectedSquare}
           selectedPiece={selectedPiece}
+          currentTurn={currentTurn}
+          statusMessage={statusMessage}
           onClearSelection={clearSelection}
         />
       </div>
