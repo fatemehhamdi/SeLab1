@@ -111,7 +111,15 @@ function getCandidateMoves(fileIndex, rank, piece, getBoardPiece) {
   return moves
 }
 
-function GameInfo({ selectedSquare, selectedPiece, currentTurn, statusMessage, onClearSelection }) {
+function GameInfo({
+  selectedSquare,
+  selectedPiece,
+  currentTurn,
+  statusMessage,
+  moveHistory,
+  onClearSelection,
+  onRestart,
+}) {
   return (
     <aside className="game-info" aria-label="Game information">
       <span className="eyebrow">LOCAL MULTIPLAYER</span>
@@ -144,6 +152,28 @@ function GameInfo({ selectedSquare, selectedPiece, currentTurn, statusMessage, o
         <span className="note-icon" aria-hidden="true">♟</span>
         <p>Take turns and capture your opponent&apos;s pieces to win.</p>
       </div>
+      <div className="history-section">
+        <div className="history-heading">
+          <span className="turn-label">Move history</span>
+          <span className="move-count">{moveHistory.length}</span>
+        </div>
+        {moveHistory.length ? (
+          <ol className="move-history">
+            {moveHistory.map((move) => (
+              <li key={move.id}>
+                <span>{move.id}.</span>
+                <strong>{move.from} → {move.to}</strong>
+                {move.captured && <small>captured {move.captured}</small>}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="history-empty">No moves yet.</p>
+        )}
+      </div>
+      <button className="restart-button" type="button" onClick={onRestart}>
+        Restart game
+      </button>
     </aside>
   )
 }
@@ -193,6 +223,7 @@ function App() {
   const [currentTurn, setCurrentTurn] = useState('white')
   const [selectedSquare, setSelectedSquare] = useState(null)
   const [allowedSquares, setAllowedSquares] = useState([])
+  const [moveHistory, setMoveHistory] = useState([])
   const [statusMessage, setStatusMessage] = useState({
     type: 'info',
     text: 'Select one of your pieces to begin.',
@@ -217,11 +248,21 @@ function App() {
 
   const handleSquareClickWithRules = (square) => {
     if (selectedSquare && allowedSquares.includes(square)) {
+      const capturedPiece = board[square]
       setBoard((currentBoard) => {
         const nextBoard = { ...currentBoard, [square]: currentBoard[selectedSquare] }
         delete nextBoard[selectedSquare]
         return nextBoard
       })
+      setMoveHistory((history) => [
+        ...history,
+        {
+          id: history.length + 1,
+          from: selectedSquare,
+          to: square,
+          captured: capturedPiece ? `${capturedPiece.color} ${capturedPiece.type}` : null,
+        },
+      ])
       clearSelection()
       setCurrentTurn((turn) => (turn === 'white' ? 'black' : 'white'))
       setStatusMessage({
@@ -265,6 +306,13 @@ function App() {
   }
 
   const selectedPiece = selectedSquare ? board[selectedSquare] : null
+  const restartGame = () => {
+    setBoard(createInitialBoard())
+    setCurrentTurn('white')
+    setMoveHistory([])
+    clearSelection()
+    setStatusMessage({ type: 'info', text: 'New game started. White to move.' })
+  }
 
   return (
     <main className="app-shell">
@@ -298,7 +346,9 @@ function App() {
           selectedPiece={selectedPiece}
           currentTurn={currentTurn}
           statusMessage={statusMessage}
+          moveHistory={moveHistory}
           onClearSelection={clearSelection}
+          onRestart={restartGame}
         />
       </div>
     </main>
