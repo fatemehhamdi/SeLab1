@@ -1426,14 +1426,7 @@ function App() {
       text: `Last move undone. ${previousState.currentTurn === 'white' ? 'White' : 'Black'}'s turn.`,
     })
     setUndoStack((stack) => stack.slice(0, -1))
-    setMoveHistory((history) => [
-      ...history,
-      {
-        kind: 'undo',
-        from: previousState.from,
-        to: previousState.to,
-      },
-    ])
+    setMoveHistory((history) => history.slice(0, -1))
   }
 
   return (
