@@ -33,6 +33,17 @@ function getPiece(fileIndex, rank) {
   return null
 }
 
+function createInitialBoard() {
+  const board = {}
+  ranks.forEach((rank) => {
+    files.forEach((file, fileIndex) => {
+      const piece = getPiece(fileIndex, rank)
+      if (piece) board[`${file}${rank}`] = piece
+    })
+  })
+  return board
+}
+
 function getCandidateMoves(fileIndex, rank, piece, getBoardPiece) {
   const moves = []
   const addStep = (fileOffset, rankOffset) => {
@@ -134,15 +145,15 @@ function GameInfo({ selectedSquare, selectedPiece, onClearSelection }) {
   )
 }
 
-function ChessBoard({ selectedSquare, allowedSquares, onSquareClick }) {
+function ChessBoard({ board, selectedSquare, allowedSquares, onSquareClick }) {
   return (
     <div className="board-shell">
       <div className="board" role="grid" aria-label="Chess board">
         {ranks.flatMap((rank) =>
           files.map((file, fileIndex) => {
-            const piece = getPiece(fileIndex, rank)
-            const isLight = (fileIndex + rank) % 2 === 0
             const square = `${file}${rank}`
+            const piece = board[square]
+            const isLight = (fileIndex + rank) % 2 === 0
             const isSelected = selectedSquare === square
             const isAllowed = allowedSquares.includes(square)
 
@@ -175,6 +186,7 @@ function ChessBoard({ selectedSquare, allowedSquares, onSquareClick }) {
 }
 
 function App() {
+  const [board, setBoard] = useState(createInitialBoard)
   const [selectedSquare, setSelectedSquare] = useState(null)
   const [allowedSquares, setAllowedSquares] = useState([])
 
@@ -189,13 +201,23 @@ function App() {
     return () => window.removeEventListener('keydown', cancelSelection)
   }, [])
 
-  const getBoardPiece = (square) => getPiece(files.indexOf(square[0]), Number(square[1]))
+  const getBoardPiece = (square) => board[square]
   const clearSelection = () => {
     setSelectedSquare(null)
     setAllowedSquares([])
   }
 
   const handleSquareClickWithRules = (square) => {
+    if (selectedSquare && allowedSquares.includes(square)) {
+      setBoard((currentBoard) => {
+        const nextBoard = { ...currentBoard, [square]: currentBoard[selectedSquare] }
+        delete nextBoard[selectedSquare]
+        return nextBoard
+      })
+      clearSelection()
+      return
+    }
+
     if (selectedSquare === square) {
       clearSelection()
       return
@@ -214,9 +236,7 @@ function App() {
     setAllowedSquares(getCandidateMoves(fileIndex, rank, piece, getBoardPiece))
   }
 
-  const selectedFileIndex = selectedSquare ? files.indexOf(selectedSquare[0]) : -1
-  const selectedRank = selectedSquare ? Number(selectedSquare[1]) : 0
-  const selectedPiece = selectedSquare ? getPiece(selectedFileIndex, selectedRank) : null
+  const selectedPiece = selectedSquare ? board[selectedSquare] : null
 
   return (
     <main className="app-shell">
@@ -239,6 +259,7 @@ function App() {
             <span className="board-size">{selectedSquare ? 'Press Esc to cancel' : 'Select a piece'}</span>
           </div>
           <ChessBoard
+            board={board}
             selectedSquare={selectedSquare}
             allowedSquares={allowedSquares}
             onSquareClick={handleSquareClickWithRules}
