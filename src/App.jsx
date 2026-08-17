@@ -78,7 +78,7 @@ function getCandidateMoves(fileIndex, rank, type) {
   return moves
 }
 
-function GameInfo() {
+function GameInfo({ selectedSquare, selectedPiece, onClearSelection }) {
   return (
     <aside className="game-info" aria-label="Game information">
       <span className="eyebrow">LOCAL MULTIPLAYER</span>
@@ -89,6 +89,20 @@ function GameInfo() {
           <span className="turn-label">Current turn</span>
           <strong>White to move</strong>
         </div>
+      </div>
+      <div className={`selection-card ${selectedPiece ? 'active' : ''}`}>
+        <span className="turn-label">Selected piece</span>
+        {selectedPiece ? (
+          <>
+            <strong>{selectedPiece.color} {selectedPiece.type}</strong>
+            <span className="selection-square">Located on {selectedSquare}</span>
+            <button className="clear-selection" type="button" onClick={onClearSelection}>
+              Clear selection
+            </button>
+          </>
+        ) : (
+          <span className="selection-empty">Choose a white piece on the board.</span>
+        )}
       </div>
       <div className="game-note">
         <span className="note-icon" aria-hidden="true">♟</span>
@@ -174,6 +188,14 @@ function App() {
     setAllowedSquares(getCandidateMoves(fileIndex, rank, piece.type))
   }
 
+  const selectedFileIndex = selectedSquare ? files.indexOf(selectedSquare[0]) : -1
+  const selectedRank = selectedSquare ? Number(selectedSquare[1]) : 0
+  const selectedPiece = selectedSquare ? getPiece(selectedFileIndex, selectedRank) : null
+  const clearSelection = () => {
+    setSelectedSquare(null)
+    setAllowedSquares([])
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -200,7 +222,11 @@ function App() {
             onSquareClick={handleSquareClick}
           />
         </section>
-        <GameInfo />
+        <GameInfo
+          selectedSquare={selectedSquare}
+          selectedPiece={selectedPiece}
+          onClearSelection={clearSelection}
+        />
       </div>
     </main>
   )

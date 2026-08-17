@@ -55,6 +55,12 @@ h2 { margin-top: 8px; font: 700 clamp(1.4rem, 2.5vw, 2rem)/1.1 Georgia, serif; }
 .turn-card { display: flex; align-items: center; gap: 14px; padding: 17px; border-radius: 13px; background: #eff6f0; }
 .turn-label { display: block; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .turn-card strong { display: block; margin-top: 5px; font-size: 15px; }
+.selection-card { margin-top: 18px; padding: 17px; border: 1px dashed var(--line); border-radius: 13px; }
+.selection-card.active { border-color: #9bc5a8; background: #f7fbf7; }
+.selection-card strong { display: block; margin-top: 6px; color: var(--ink); font-size: 16px; text-transform: capitalize; }
+.selection-square, .selection-empty { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+.clear-selection { margin-top: 14px; padding: 7px 10px; border: 1px solid #b9d4c1; border-radius: 7px; background: transparent; color: var(--green-dark); cursor: pointer; font-size: 12px; font-weight: 700; }
+.clear-selection:hover { background: #e7f3e9; }
 .game-note { display: flex; gap: 11px; margin-top: 28px; padding-top: 25px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; line-height: 1.6; }
 .note-icon { color: var(--green); font-size: 20px; }
 
