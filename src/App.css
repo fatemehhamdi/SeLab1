@@ -87,6 +87,7 @@ h2 { margin-top: 8px; font: 700 clamp(1.4rem, 2.5vw, 2rem)/1.1 Georgia, serif; }
 .move-history { display: grid; gap: 8px; max-height: 180px; overflow-y: auto; margin: 12px 0 0; padding: 0; list-style: none; }
 .move-history li { display: grid; grid-template-columns: 19px 1fr; gap: 5px; padding: 8px 9px; border-radius: 7px; background: #f7f9f7; color: var(--muted); font-size: 12px; }
 .move-history strong { color: var(--ink); font-weight: 700; }
+.move-history small { grid-column: 2; color: #8d6b1d; font-size: 10px; }
 .move-history li.undo { background: #fff8e7; color: #8d6b1d; }
 .history-empty { margin-top: 12px; color: var(--muted); font-size: 12px; }
 

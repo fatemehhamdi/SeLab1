@@ -944,6 +944,9 @@ function GameInfo({
                     ? `Undo: ${move.from} → ${move.to}`
                     : `${move.from} → ${move.to}`}
                 </strong>
+                {move.special && (
+                  <small>{move.special}</small>
+                )}
               </li>
             ))}
           </ol>
@@ -1272,6 +1275,10 @@ function App() {
         square,
         enPassantTarget,
       )
+      const isEnPassantCapture =
+        movingPiece.type === 'pawn' &&
+        square === enPassantTarget &&
+        !board[square]
 
       setUndoStack((stack) => [
         ...stack,
@@ -1291,6 +1298,9 @@ function App() {
           kind: 'move',
           from: selectedSquare,
           to: square,
+          special: isEnPassantCapture
+            ? 'en passant'
+            : null,
         },
       ])
 
@@ -1426,14 +1436,7 @@ function App() {
       text: `Last move undone. ${previousState.currentTurn === 'white' ? 'White' : 'Black'}'s turn.`,
     })
     setUndoStack((stack) => stack.slice(0, -1))
-    setMoveHistory((history) => [
-      ...history,
-      {
-        kind: 'undo',
-        from: previousState.from,
-        to: previousState.to,
-      },
-    ])
+    setMoveHistory((history) => history.slice(0, -1))
   }
 
   return (
